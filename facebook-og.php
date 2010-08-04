@@ -16,7 +16,7 @@ class FacebookOG
 	 */
 	private static $ATTRS = array(
 		'title',
-		'img',
+		'image',
 		'desc',
 		'type'
 	);
@@ -70,18 +70,36 @@ class FacebookOG
 	 */
 	public function __construct()
 	{
-		add_action('admin_init', array($this, 'facebook_init'));
+		add_action('admin_init', array($this, 'admin_init'));
+		add_action('wp_head', array($this, 'meta'));
+	}
+	
+	public function meta()
+	{
+		if (is_single())
+		{
+			global $post;
+			$custom = get_post_custom($post->ID);
+			
+			foreach (self::$ATTRS as $k)
+			{
+				$v = (isset($custom[$k]) && isset($custom[$k][0])) ? $custom[$k][0] : null;
+			
+				if (!is_null($v))
+					echo('<meta property="og:'.$k.'" content="'.$v.'" />'."\n");			
+			}
+		}
 	}
 	
 	/**
 	 * Called by admin_init. Adds the meta boxes to the 'post' type.
 	 */
-	public function facebook_init()
+	public function admin_init()
 	{
 		if (function_exists('add_meta_box'))
 		{
 			add_meta_box('fbox', 'Facebook OpenGraph Meta', array($this, 'facebook_og'), 'post', 'side', 'low');
-			add_action('wp_insert_post', array($this, 'save_facebook_og'), 10, 2);
+			add_action('wp_insert_post', array($this, 'save'), 10, 2);
 		}
 	}
 
@@ -92,7 +110,7 @@ class FacebookOG
 	 * @param int 				$post_id			Post ID.
 	 * @param WPPost|null		$post				Wordpress post object.
 	 */
-	public function save_facebook_og($post_id, $post = null)
+	public function save($post_id, $post = null)
 	{
 		if (!is_null($post))
 		{
@@ -151,8 +169,8 @@ class FacebookOG
 		</p>
 		
 		<p>
-			<label for=img>Image <em>(relative url)</em></label>
-			<input type=text placeholder="Relative Image URL" name=img id=img value="<?php echo($data['img']); ?>" />
+			<label for=image>Image <em>(relative url)</em></label>
+			<input type=text placeholder="Relative Image URL" name=image id=image value="<?php echo($data['image']); ?>" />
 		</p>
 		
 		<p>
