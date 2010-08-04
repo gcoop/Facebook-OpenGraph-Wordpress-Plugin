@@ -10,6 +10,10 @@
 
 class FacebookOG
 {
+	/**
+	 * Attributes handled by meta box. Makes it easy to retrieve/insert the keys/values from storage.
+	 * @var array
+	 */
 	private static $ATTRS = array(
 		'title',
 		'img',
@@ -17,11 +21,61 @@ class FacebookOG
 		'type'
 	);
 	
+	/**
+	 * Supported content types by the Facebook OpenGraph Protocol {@seehttp://developers.facebook.com/docs/opengraph#types}.
+	 * @var array
+	 */
+	private static $TYPES = array(
+		'activity',
+		'sport',
+		'bar',
+		'company',
+		'cafe',
+		'hotel',
+		'resturant',
+		'cause',
+		'sports_league',
+		'sports_team',
+		'band',
+		'goverment',
+		'non_profit',
+		'school',
+		'university',
+		'actor',
+		'athlete',
+		'author',
+		'director',
+		'musician',
+		'politician',
+		'public_figure',
+		'city',
+		'country',
+		'landmark',
+		'state_province',
+		'album',
+		'book',
+		'drink',
+		'food',
+		'game',
+		'product',
+		'song',
+		'movie',
+		'tv_show',
+		'blog',
+		'article'
+	);
+	
+	/**
+	 * Construct adds the hooks.
+	 */
 	public function __construct()
 	{
 		add_action('admin_init', array($this, 'facebook_init'));
 	}
 	
+	/**
+	 * Called by admin_init. Adds the meta boxes to the 'post' type.
+	 */
 	public function facebook_init()
 	{
 		if (function_exists('add_meta_box'))
@@ -31,6 +85,13 @@ class FacebookOG
 		}
 	}
 
+	/**
+	 * Iterates self::$ATTRS detecting updated information by the last post request to save the post and updates 
+	 * attributes accordingly.
+	 * 
+	 * @param int 				$post_id			Post ID.
+	 * @param WPPost|null		$post				Wordpress post object.
+	 */
 	public function save_facebook_og($post_id, $post = null)
 	{
 		if (!is_null($post))
@@ -46,6 +107,9 @@ class FacebookOG
 		}
 	}
 	
+	/**
+	 * Spits out the contents of our custom meta box.
+	 */
 	public function facebook_og()
 	{
 		global $post;
@@ -56,47 +120,6 @@ class FacebookOG
 		{
 			$data[$k] = (isset($custom[$k]) && isset($custom[$k][0])) ? $custom[$k][0] : '';
 		}
-		
-		// All supported types for OpenGraph Protocol {@see http://developers.facebook.com/docs/opengraph#types}.
-		$types = array(
-			'activity',
-			'sport',
-			'bar',
-			'company',
-			'cafe',
-			'hotel',
-			'resturant',
-			'cause',
-			'sports_league',
-			'sports_team',
-			'band',
-			'goverment',
-			'non_profit',
-			'school',
-			'university',
-			'actor',
-			'athlete',
-			'author',
-			'director',
-			'musician',
-			'politician',
-			'public_figure',
-			'city',
-			'country',
-			'landmark',
-			'state_province',
-			'album',
-			'book',
-			'drink',
-			'food',
-			'game',
-			'product',
-			'song',
-			'movie',
-			'tv_show',
-			'blog',
-			'article'
-		);
 	
 		?>
 		<style>
@@ -118,7 +141,7 @@ class FacebookOG
 			<br />
 			<select id=type name=type>
 				<?php
-					foreach ($types as $t)
+					foreach (self::$TYPES as $t)
 					{
 						$s = ($data['type'] != '' && $data['type'] == $t) ? ' selected="selected"' : '';
 						echo('<option value="'.$t.'"'.$s.'>'.ucwords(str_replace('_', ' ', $t)).'</option>'."\n");
@@ -140,6 +163,13 @@ class FacebookOG
 	}
 }
 
+/**
+ * Add a init function to the init hook.
+ */
 add_action('init', 'facebook_og_init');
+
+/**
+ * Init function creates an instance of {@see FacebookOG} and puts it in a global var $facebook_og.
+ */
 function facebook_og_init() { global $facebook_og; $facebook_og = new FacebookOG(); }
 ?>
