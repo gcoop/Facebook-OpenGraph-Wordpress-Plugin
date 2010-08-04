@@ -8,29 +8,34 @@
  * Author URI: http://gavincoop.co.uk/
  */
 
-if (function_exists('add_action'))
+class FacebookOG
 {
-	add_action('admin_init', 'facebook_init');
+	private static $ATTRS = array(
+		'title',
+		'img',
+		'desc',
+		'type'
+	);
 	
-	function facebook_init()
+	public function __construct()
 	{
-		$plugin_dir = basename(dirname(__FILE__));
-		load_plugin_textdomain('facebook-og', null, $plugin_dir);
+		add_action('admin_init', array($this, 'facebook_init'));
+	}
 	
+	public function facebook_init()
+	{
 		if (function_exists('add_meta_box'))
 		{
-			add_meta_box('fbox', 'Facebook OpenGraph Meta', 'facebook_og', 'post', 'side', 'low');
-			add_action('wp_insert_post', 'save_facebook_og', 10, 2);
+			add_meta_box('fbox', 'Facebook OpenGraph Meta', array($this, 'facebook_og'), 'post', 'side', 'low');
+			add_action('wp_insert_post', array($this, 'save_facebook_og'), 10, 2);
 		}
 	}
 
-	function save_facebook_og($post_id, $post = null)
+	public function save_facebook_og($post_id, $post = null)
 	{
 		if (!is_null($post))
 		{
-			$keys = get_facebook_og_attrs();
-
-			foreach ($keys as $k)
+			foreach (self::$ATTRS as $k)
 			{
 				// Attribute provided, save it.
 				if (isset($_POST[$k]) && $_POST[$k] != '')
@@ -41,24 +46,13 @@ if (function_exists('add_action'))
 		}
 	}
 	
-	function get_facebook_og_attrs()
-	{
-		return array(
-			'title',
-			'img',
-			'desc',
-			'type'
-		);
-	}
-	
-	function facebook_og()
+	public function facebook_og()
 	{
 		global $post;
 		$custom = get_post_custom($post->ID);
-		$a = get_facebook_og_attrs();
 		
 		$data = array();
-		foreach ($a as $k)
+		foreach (self::$ATTRS as $k)
 		{
 			$data[$k] = (isset($custom[$k]) && isset($custom[$k][0])) ? $custom[$k][0] : '';
 		}
@@ -146,4 +140,6 @@ if (function_exists('add_action'))
 	}
 }
 
+add_action('init', 'facebook_og_init');
+function facebook_og_init() { global $facebook_og; $facebook_og = new FacebookOG(); }
 ?>
