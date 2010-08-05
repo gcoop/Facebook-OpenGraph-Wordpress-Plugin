@@ -92,15 +92,25 @@ class FacebookOG
 	}
 	
 	/**
+	 * Allows you to register the Facebook OG meta box plugin for a new post type.
+	 * 
+	 * @param string 			$t					Custom post type ID.
+	 */
+	public function register_for_type($t)
+	{
+		if (function_exists('add_meta_box'))
+		{
+			add_meta_box('fbox', 'Facebook OpenGraph Meta', array($this, 'facebook_og'), $t, 'side', 'low');
+			add_action('wp_insert_post', array($this, 'save'), 10, 2);
+		}
+	}
+	
+	/**
 	 * Called by admin_init. Adds the meta boxes to the 'post' type.
 	 */
 	public function admin_init()
 	{
-		if (function_exists('add_meta_box'))
-		{
-			add_meta_box('fbox', 'Facebook OpenGraph Meta', array($this, 'facebook_og'), 'post', 'side', 'low');
-			add_action('wp_insert_post', array($this, 'save'), 10, 2);
-		}
+		$this->register_for_type('post');
 	}
 
 	/**
@@ -184,10 +194,18 @@ class FacebookOG
 /**
  * Add a init function to the init hook.
  */
-add_action('init', 'facebook_og_init');
+add_action('init', 'facebook_og');
 
 /**
  * Init function creates an instance of {@see FacebookOG} and puts it in a global var $facebook_og.
  */
-function facebook_og_init() { global $facebook_og; $facebook_og = new FacebookOG(); }
+function facebook_og() 
+{ 
+	static $facebook_og;
+	
+	if (!isset($facebook_og))
+		$facebook_og = new FacebookOG(); 
+
+	return $facebook_og;
+}
 ?>
